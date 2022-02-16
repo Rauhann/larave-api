@@ -1,0 +1,79 @@
+version: '3.7'
+
+volumes:
+    laravel-mysql:
+        driver: 'local'
+    laravel-cache:
+        driver: 'local'
+
+networks:
+    laravel-net:
+        driver: 'bridge'
+
+services:
+    db:
+        container_name: laravel-db
+        image: mysql:8.0
+        volumes:
+            - laravel-mysql:/var/lib/mysql
+        restart: unless-stopped
+        tty: true
+        ports:
+            - "3000:3306"
+        environment:
+            - MYSQL_DATABASE=${DB_DATABASE}
+            - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+            - MYSQL_USER=${DB_USERNAME}
+            - MYSQL_PASSWORD=${DB_PASSWORD}
+        networks:
+            - laravel-net
+
+    cache:
+        container_name: laravel-redis
+        image: redis:7.0-rc1-alpine3.15
+        command: redis-server --appendonly yes --requirepass "${REDIS_PASSWORD}"
+        volumes:
+            - laravel-cache:/data
+        ports:
+            - "3001:6379"
+        restart: unless-stopped
+        networks:
+            - laravel-net
+
+    webserver:
+        container_name: laravel-nginx
+        image: nginx:1.21.6
+        volumes:
+            - ./:/app
+            - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
+        ports:
+            - "5000:80"
+            - "5001:443"
+        restart: unless-stopped
+        tty: true
+        networks:
+            - laravel-net
+
+    app:
+        container_name: laravel-php
+        working_dir: /app
+        build:
+            context: .
+            dockerfile: ./docker/Dockerfile
+        volumes:
+            - ./:/app
+            - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+            - ./docker/supervisor/supervisord.conf:/etc/supervisor/supervisord.conf
+        ports:
+          - "9000"
+        environment:
+            SERVICE_NAME: app
+            SERVICE_TAGS: dev
+        restart: unless-stopped
+        depends_on:
+            - db
+            - webserver
+            - cache
+        tty: true
+        networks:
+            - laravel-net
