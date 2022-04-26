@@ -7,7 +7,10 @@ then
     exit 1
 fi
 
-composer install && php artisan config:cache && php artisan view:clear
+su -c "composer install" -s /bin/sh nginx
+su -c "php artisan config:cache" -s /bin/sh nginx
+su -c "php artisan horizon:publish" -s /bin/sh nginx
+su -c "php artisan l5-swagger:generate" -s /bin/sh nginx
 /usr/bin/supervisord -n -c /etc/supervisor/supervisord.conf &
 php-fpm
 

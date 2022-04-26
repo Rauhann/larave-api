@@ -16,13 +16,13 @@ services:
         image: mysql:8.0
         volumes:
             - laravel-mysql:/var/lib/mysql
-        restart: unless-stopped
+        restart: always
         tty: true
         ports:
             - "3000:3306"
         environment:
             - MYSQL_DATABASE=${DB_DATABASE}
-            - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+            - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
             - MYSQL_USER=${DB_USERNAME}
             - MYSQL_PASSWORD=${DB_PASSWORD}
         networks:
@@ -36,7 +36,7 @@ services:
             - laravel-cache:/data
         ports:
             - "3001:6379"
-        restart: unless-stopped
+        restart: always
         networks:
             - laravel-net
 
@@ -49,31 +49,25 @@ services:
         ports:
             - "5000:80"
             - "5001:443"
-        restart: unless-stopped
+        restart: always
+        depends_on:
+            - db
+            - app
+            - cache
         tty: true
         networks:
             - laravel-net
 
     app:
         container_name: laravel-php
-        working_dir: /app
         build:
             context: .
             dockerfile: ./docker/Dockerfile
         volumes:
             - ./:/app
-            - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
-            - ./docker/supervisor/supervisord.conf:/etc/supervisor/supervisord.conf
         ports:
-          - "9000"
-        environment:
-            SERVICE_NAME: app
-            SERVICE_TAGS: dev
-        restart: unless-stopped
-        depends_on:
-            - db
-            - webserver
-            - cache
+            - "9000"
+        restart: always
         tty: true
         networks:
             - laravel-net

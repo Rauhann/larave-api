@@ -17,7 +17,7 @@ build:
 buildd:
 	docker-compose up --build -d
 sh:
-	docker exec -it laravel-php /bin/bash
+	docker exec -it -u nginx laravel-php /bin/bash
 server:
 	docker exec -it laravel-nginx /bin/bash
 db:

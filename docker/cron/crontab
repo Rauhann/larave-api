@@ -1,1 +1,4 @@
-* * * * * www php /app/artisan schedule:run >> /dev/stdout
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+* * * * * root php /app/artisan schedule:run >> /dev/stdout

@@ -1,7 +1,9 @@
 FROM php:8.0-fpm
 
-LABEL maintainer "Rauhann Chaves"
+# Autor do arquivo
+LABEL maintainer "Rauhann Chaves (https://github.com/Rauhann)"
 
+# Usuário default
 ARG UID=1000
 ARG GID=1000
 
@@ -31,34 +33,27 @@ RUN apt-get update && apt-get install -y \
     supervisor
 
 # Sincroniza usuário e grupo com o host
-RUN groupadd -g ${GID} www
-RUN useradd -u ${UID} -ms /bin/bash -g www www
-
-# Configuração de timezone
-RUN echo "America/Sao_Paulo" > /etc/timezone && \
-    cp /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm -rf /var/cache/apt/* && \
-    rm -rf /tmp/*
+RUN groupadd -g ${GID} nginx
+RUN useradd -u ${UID} -ms /bin/bash -g nginx nginx
 
 # Configuração de cron
-COPY ./docker/cron/crontab /var/spool/cron/crontabs/root
-RUN chmod -R 777 /var/spool/cron/crontabs
+COPY ./docker/cron/crontab /etc/cron.d/crontab
+RUN chmod 0644 /etc/cron.d/crontab
+RUN crontab /etc/cron.d/crontab
 
 # Instalação do composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
+# Verificar a validade de usar essa versão
+# COPY --from=composer:2.2.12 /usr/bin/composer /usr/local/bin/composer
+
 # Copiando arquivos para container
-COPY --chown=www:www . /app
+COPY --chown=nginx:nginx . /app
 COPY ./docker/supervisor/supervisord.conf /etc/supervisor/supervisord.conf
-COPY ./docker/php/php-fpm-pool.conf /etc/php8/fpm/pool.d/www.conf
 COPY ./docker/bash/entrypoint.sh /sbin/entrypoint.sh
 
-USER www
-
+# Expondo porta de serviço PHP
 EXPOSE 9000
 
+# Script para inicialização
 ENTRYPOINT ["/sbin/entrypoint.sh"]
-
-CMD ["true"]

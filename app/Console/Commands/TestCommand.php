@@ -2,7 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Hash;
 
 class TestCommand extends Command
 {
@@ -37,10 +39,11 @@ class TestCommand extends Command
      */
     public function handle()
     {
-        $conteudo = '<?php phpinfo(); ?>';
+        User::create([
+            'name' => 'Rauhann',
+            'email' => 'rauhann2711@gmail.com_' . date('dmY_His'),
+            'password' => Hash::make('teste')
+        ]);
 
-        $arquivo = fopen('files/novophp.php', 'w');
-        fwrite($arquivo, $conteudo);
-        fclose($arquivo);
     }
 }
