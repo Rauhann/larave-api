@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Route;
 
 class RouteServiceProvider extends ServiceProvider
 {
+    const REQUEST_PER_MINUTE = 60;
+
     /**
      * The path to the "home" route for your application.
      *
@@ -38,14 +40,14 @@ class RouteServiceProvider extends ServiceProvider
         $this->configureRateLimiting();
 
         $this->routes(function () {
-            Route::prefix('api')
-                ->middleware('api')
+            Route::middleware('api')
                 ->namespace($this->namespace)
-                ->group(base_path('routes/api.php'));
+                ->group(base_path('routes/home.php'));
 
-            Route::middleware('web')
+            Route::middleware('api')
+                ->prefix('miscellaneous')
                 ->namespace($this->namespace)
-                ->group(base_path('routes/web.php'));
+                ->group(base_path('routes/Api/miscellaneous.php'));
         });
     }
 
@@ -57,7 +59,7 @@ class RouteServiceProvider extends ServiceProvider
     protected function configureRateLimiting()
     {
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by(optional($request->user())->id ?: $request->ip());
+            return Limit::perMinute(self::REQUEST_PER_MINUTE)->by(optional($request->user())->id ?: $request->ip());
         });
     }
 }

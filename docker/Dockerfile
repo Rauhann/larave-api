@@ -3,7 +3,7 @@ FROM php:8.0-fpm
 # Autor do arquivo
 LABEL maintainer "Rauhann Chaves (https://github.com/Rauhann)"
 
-# Usuário default
+# Usuário host
 ARG UID=1000
 ARG GID=1000
 
@@ -33,19 +33,16 @@ RUN apt-get update && apt-get install -y \
     supervisor
 
 # Sincroniza usuário e grupo com o host
-RUN groupadd -g ${GID} nginx
-RUN useradd -u ${UID} -ms /bin/bash -g nginx nginx
+RUN groupadd -g ${GID} nginx && \
+    useradd -u ${UID} -ms /bin/bash -g nginx nginx
 
 # Configuração de cron
 COPY ./docker/cron/crontab /etc/cron.d/crontab
-RUN chmod 0644 /etc/cron.d/crontab
-RUN crontab /etc/cron.d/crontab
+RUN chmod 0644 /etc/cron.d/crontab && \
+    crontab /etc/cron.d/crontab
 
 # Instalação do composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-# Verificar a validade de usar essa versão
-# COPY --from=composer:2.2.12 /usr/bin/composer /usr/local/bin/composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer --version=2.2.12
 
 # Copiando arquivos para container
 COPY --chown=nginx:nginx . /app
